@@ -18,7 +18,7 @@ from keras.models import Sequential, load_model
 #modelTrafficSignRecognition=load_model('my_model.h5')
 # downloaded from https://github.com/AvishkaSandeepa/Traffic-Signs-Recognition
 # 
-modelTrafficSignRecognition=load_model('model.h5')
+modelTrafficSignRecognition = load_model("model.h5", compile=False)
 
 
 

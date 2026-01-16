@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+yolo_env/
+
+# ML models
+*.h5
+*.pt
+*.weights
+
+# YOLO / training outputs
+runs/
+train/
+valid/
+test/
+ts/
+
+# Videos
+*.mp4
+
+# Dataset / experiments
+slam/
+fast_rcnn/
+
+# OS
+.DS_Store
+Thumbs.db

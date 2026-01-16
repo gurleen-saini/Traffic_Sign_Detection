@@ -11,6 +11,8 @@ Created on Jan 2024
 # Downloaded from https://www.kaggle.com/datasets/valentynsichkar/traffic-signs-dataset-in-yolo-format/data
 
 dirVideo ="traffic-sign-to-test.mp4"
+# dirVideo ="4434242-uhd_2160_3840_24fps.mp4"
+# dirVideo ="testvideo1.mp4"
 
 #Downloaded from https://www.pexels.com/video/road-trip-4434242/
 #dirVideo ="production_id_4434242 (2160p).mp4"
@@ -20,6 +22,16 @@ dirnameYolo="bestDetectTrafficSign.pt"
 
 import cv2
 import time
+
+from tracker.sort import Sort
+import numpy as np
+
+from slam.slam_runner import SlamSystem
+slam = SlamSystem()
+
+
+tracker = Sort()
+alerted_ids = set()
 
 TimeIni=time.time()
 # in  14 minutes = 800 seconds finish  
@@ -34,53 +46,17 @@ print(class_list)
 
 import numpy as np
 
-import numpy
-
-# https://medium.chom/@chanon.krittapholchai/build-object-detection-gui-with-yolov8-and-pysimplegui-76d5f5464d6c
-def DetectTrafficSignWithYolov8 (img):
-  
-   TabcropTrafficSign=[]
-   
-   y=[]
-   yMax=[]
-   x=[]
-   xMax=[]
-   Tabclass_name=[]
-   results = model.predict(img)
-   for i in range(len(results)):
-       # may be several signals in a frame
-       # there is no ROI
-       result=results[i]
-       
-       xyxy= result.boxes.xyxy.numpy()
-       confidence= result.boxes.conf.numpy()
-       class_id= result.boxes.cls.numpy().astype(int)
-       print(class_id)
-       out_image = img.copy()
-       for j in range(len(class_id)):
-           con=confidence[j]
-           label=class_list[class_id[j]] + " " + str(con)
-           box=xyxy[j]
-           
-           cropTrafficSign=out_image[int(box[1]):int(box[3]),int(box[0]):int(box[2])]
-           
-           TabcropTrafficSign.append(cropTrafficSign)
-           y.append(int(box[1]))
-           yMax.append(int(box[3]))
-           x.append(int(box[0]))
-           xMax.append(int(box[2]))
-           
-           print(label)
-           Tabclass_name.append(label)
-            
-      
-   return TabcropTrafficSign, y,yMax,x,xMax, Tabclass_name
-
 
 ###########################################################
 # MAIN
 ##########################################################
-cap = cv2.VideoCapture(dirVideo)
+USE_WEBCAM = False  # True for webcam, False for video
+
+if USE_WEBCAM:
+    cap = cv2.VideoCapture(0)
+else:
+    cap = cv2.VideoCapture(dirVideo)
+
 # https://levelup.gitconnected.com/opencv-python-reading-and-writing-images-and-videos-ed01669c660c
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 fps=5.0
@@ -94,70 +70,108 @@ video_writer = cv2.VideoWriter('demonstration.mp4',fourcc,fps, size)
 ContFrames=0
 ContDetected=0
 ContNoDetected=0
-while (cap.isOpened()):
-        ret, img = cap.read()
-        if ret != True: break
-        
-        else:
 
-            gray=img
+while cap.isOpened():
 
-            #cv2.imshow('Gray', gray)
-            #cv2.waitKey(0)
-            
-            TabImgSelect, y, yMax, x, xMax, Tabclass_name =DetectTrafficSignWithYolov8(gray)
-            
-            if TabImgSelect==[]:
-                #print( " NON DETECTED")
-                ContNoDetected=ContNoDetected+1 
-                #continue
-            else:
-                ContDetected=ContDetected+1
-                #print( " DETECTED ")
-                for z in range(len(TabImgSelect)):
-                     #if TabImgSelect[z] == []: continue
-                     gray1=TabImgSelect[z]
-                     #cv2.waitKey(0)
-                     start_point=(x[z],y[z]) 
-                     end_point=(xMax[z], yMax[z])
-                     color=(0,0,255)
-                     # Using cv2.rectangle() method
-                     # Draw a rectangle with blue line borders of thickness of 5 px
-                     img = cv2.rectangle(gray, start_point, end_point,(255,0,0), 5)
-                     # Put text
-                     text_location = (x[z], y[z])
-                     text_color = (255,255,255)
-                     
-                     cv2.putText(img, str(Tabclass_name[z]) ,text_location
-                             , cv2.FONT_HERSHEY_SIMPLEX , 1
-                             , text_color, 2 ,cv2.LINE_AA)
-                     cv2.putText(gray1, str(Tabclass_name[z]) ,text_location
-                             , cv2.FONT_HERSHEY_SIMPLEX , 1
-                             , text_color, 2 ,cv2.LINE_AA)
-                             
-                 #cv2.imshow('Trafic Sign', gray1)
-                 #cv2.waitKey(0)
-                 # para     
-                 #show_image=cv2.resize(img,(1000,700))
-                 #cv2.imshow('Frame', show_image)
-                 #cv2.waitKey(0)
-            img_show=cv2.resize(img,(frame_width,frame_height))     
-            cv2.imshow('Frame', img_show)
-            # Press Q on keyboard to exit
-            if cv2.waitKey(25) & 0xFF == ord('q'): break 
-            # saving video
-            video_writer.write(img)    
-            #a los 10 minutos = 600 segundos acaba     
-            if time.time() - TimeIni > TimeLimit:
-                    
-                    break
-                   
-          
+    ret, img = cap.read()
+    if not ret:
+        break
+
+    # 1️⃣ SLAM – camera pose estimation
+    camera_pose = slam.track(img)
+    # Example pose: (x, y, theta)
+
+    # Convert pose to SLAM state (simple logic)
+    if camera_pose is None:
+        slam_state = "LOST"
+    else:
+        slam_state = "TRACKING"
+
+
+    # 2️⃣ YOLO detection
+    detections = []
+
+    if slam_state == "TRACKING":
+        results = model(img, conf=0.4, verbose=False)
+
+        for box in results[0].boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            conf = float(box.conf[0])
+            class_id = int(box.cls[0])
+            label = class_list[class_id] + f" {conf:.2f}"
+
+            crop = img[y1:y2, x1:x2]
+
+            print(class_id)
+            print(label)
+
+            detections.append([x1, y1, x2, y2, conf])
+
+    else:
+        detections = []
+
+
+    detections = np.array(detections) if len(detections) > 0 else np.empty((0, 5))
+
+    # 3️⃣ SORT tracking
+    tracks = tracker.update(detections)
+
+    # 4️⃣ Draw tracked boxes + alert + SLAM info
+    for track in tracks:
+        x1, y1, x2, y2, track_id = track.astype(int)
+
+        # 🔴 ALERT LOGIC (only once per object)
+        if track_id not in alerted_ids:
+            print(f"Traffic Sign Detected | ID: {track_id} | Pose: {camera_pose} | SLAM: {slam_state}")
+            alerted_ids.add(track_id)
+
+        # Draw bounding box
+        cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
+
+        # Display tracking ID
+        cv2.putText(
+            img,
+            f"ID {track_id}",
+            (x1, y1 - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 255),
+            2
+        )
+
+        # Display SLAM pose
+        cv2.putText(
+            img,
+            f"Pose: {camera_pose}",
+            (x1, y2 + 25),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 255, 0),
+            2
+        )
+
+    # 5️⃣ Display frame
+    img_show = cv2.resize(img, (frame_width, frame_height))
+    cv2.imshow("YOLO + SORT + SLAM", img_show)
+
+    # 6️⃣ Save frame
+    video_writer.write(img)
+
+    # Exit key
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    # Time limit
+    if time.time() - TimeIni > TimeLimit:
+        break
+
+# --------------------------------------------------
+# CLEANUP
+# --------------------------------------------------
+
 cap.release()
 video_writer.release()
 cv2.destroyAllWindows()
-           
-              
-print("")           
 
-print( " Time in seconds "+ str(time.time()-TimeIni))
+print("\nProcessing finished")
+print("Time in seconds:", time.time() - TimeIni)

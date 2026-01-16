@@ -1,8 +1,16 @@
-# -*- coding: utf-8 -*-
-# https://medium.com/@alimustoofaa/how-to-load-model-yolov8-onnx-cv2-dnn-3e176cde16e6
-# https://learnopencv.com/ultralytics-yolov8/#How-to-Use-YOLOv8?
 from ultralytics import YOLO
 
-model = YOLO("yolov8s.pt")  
-model.train(data="C:\DetectTrafficSign\\DetectTrafficSignYolov8_data.yaml", epochs=100,batch=8)  # train the model
-model.val()  # evaluate model performance on the validation set
+# Load base YOLOv8 model
+model = YOLO("yolov8s.pt")
+
+# Train
+model.train(
+    data="DetectTrafficSignYolov8_data.yaml",
+    epochs=100,
+    imgsz=640,        # 1024 is heavy for CPU; 640 is safer
+    batch=8,
+    device="cpu"      # explicit since you're on CPU
+)
+
+# Validate
+model.val()
