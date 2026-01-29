@@ -30,3 +30,5 @@ fast_rcnn/
 # OS
 .DS_Store
 Thumbs.db
+
+yolov7/
