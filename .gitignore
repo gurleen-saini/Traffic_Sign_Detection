@@ -5,22 +5,25 @@ __pycache__/
 # Virtual environment
 yolo_env/
 
-# ML models
-*.h5
-*.pt
-*.weights
+# Ignore large pretrained weights only
+yolov8s.pt
+yolov8n.pt
 
-# YOLO / training outputs
+# YOLO training outputs
 runs/
 train/
 valid/
 test/
 ts/
 
-# Videos
-*.mp4
+# Ignore large/raw videos
+testvideo*.mp4
+demonstration.mp4
 
-# Dataset / experiments
+# Allow demo test video
+!traffic-sign-to-test.mp4
+
+# Experimental modules
 slam/
 fast_rcnn/
 
