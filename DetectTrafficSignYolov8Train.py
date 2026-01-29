@@ -1,16 +1,37 @@
+# from ultralytics import YOLO
+
+# # Load base YOLOv8 model
+# model = YOLO("yolov8s.pt")
+
+# # Train
+# model.train(
+#     data="DetectTrafficSignYolov8_data.yaml",
+#     epochs=100,
+#     imgsz=640,
+#     batch=8,
+#     device="cpu",
+#     project="runs/detect",
+#     name="train",
+#     resume=True
+# )
+
+# # Validate
+# model.val()
+
 from ultralytics import YOLO
 
-# Load base YOLOv8 model
-model = YOLO("yolov8s.pt")
 
-# Train
+model = YOLO("runs/detect/train/weights/last.pt")
+
 model.train(
     data="DetectTrafficSignYolov8_data.yaml",
-    epochs=100,
-    imgsz=640,        # 1024 is heavy for CPU; 640 is safer
+    epochs=100,          
+    imgsz=640,
     batch=8,
-    device="cpu"      # explicit since you're on CPU
+    device="cpu",
+    project="runs/detect",
+    name="train",
+    resume=True          
 )
 
-# Validate
 model.val()

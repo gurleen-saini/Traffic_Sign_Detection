@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+ultralytics
+tensorflow
+torch
+torchvision
+python-multipart

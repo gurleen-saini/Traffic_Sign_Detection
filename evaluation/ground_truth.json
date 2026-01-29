@@ -1,0 +1,12 @@
+{
+  "objects": [
+    {
+      "track_id": 1,
+      "true_label": "No passing"
+    },
+    {
+      "track_id": 2,
+      "true_label": "Speed limit (60km/h)"
+    }
+  ]
+}
