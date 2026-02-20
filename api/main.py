@@ -83,9 +83,43 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 # - CNN model
 # - SLAM
 # - SORT tracker
-pipeline = TrafficSignPipeline()
-rcnn_pipeline = TrafficSignRCNNPipeline()
-yolov7_pipeline = TrafficSignYOLOv7Pipeline()
+# ================= PIPELINE HOLDERS =================
+pipeline = None
+rcnn_pipeline = None
+yolov7_pipeline = None
+ssd_pipeline = None
+
+
+def get_pipeline():
+    global pipeline
+    if pipeline is None:
+        print("Loading YOLOv8 Pipeline...")
+        pipeline = TrafficSignPipeline()
+    return pipeline
+
+
+def get_rcnn_pipeline():
+    global rcnn_pipeline
+    if rcnn_pipeline is None:
+        print("Loading RCNN Pipeline...")
+        rcnn_pipeline = TrafficSignRCNNPipeline()
+    return rcnn_pipeline
+
+
+def get_yolov7_pipeline():
+    global yolov7_pipeline
+    if yolov7_pipeline is None:
+        print("Loading YOLOv7 Pipeline...")
+        yolov7_pipeline = TrafficSignYOLOv7Pipeline()
+    return yolov7_pipeline
+
+
+def get_ssd_pipeline():
+    global ssd_pipeline
+    if ssd_pipeline is None:
+        print("Loading SSD Pipeline...")
+        ssd_pipeline = TrafficSignSSDPipeline()
+    return ssd_pipeline
 
 # ================= ROOT =================
 @app.get("/")
@@ -120,7 +154,7 @@ async def detect_video(file: UploadFile = File(...)):
         frame_id += 1
 
         # FULL LOGIC EXECUTION (same as old script)
-        frame_results = pipeline.process_frame(frame)
+        frame_results = get_pipeline().process_frame(frame)
 
         # Attach frame number
         for r in frame_results:
@@ -150,7 +184,7 @@ async def detect_video_rcnn(file: UploadFile = File(...)):
 
     for frame in read_video(video_path):
         frame_id += 1
-        frame_results = rcnn_pipeline.process_frame(frame)
+        frame_results = get_rcnn_pipeline().process_frame(frame)
 
         for r in frame_results:
             r["frame"] = frame_id
@@ -167,7 +201,6 @@ async def detect_video_rcnn(file: UploadFile = File(...)):
 # ================= SSD VIDEO =================
 # ================= SSD VIDEO =================
 
-ssd_pipeline = TrafficSignSSDPipeline()
 
 @app.post("/detect/video/ssd")
 async def detect_video_ssd(file: UploadFile = File(...)):
@@ -183,7 +216,7 @@ async def detect_video_ssd(file: UploadFile = File(...)):
     # ---- Process video frame-by-frame ----
     for frame in read_video(video_path):
         frame_id += 1
-        frame_results = ssd_pipeline.process_frame(frame)
+        frame_results = get_ssd_pipeline().process_frame(frame)
 
         for r in frame_results:
             r["frame"] = frame_id
@@ -209,7 +242,7 @@ async def detect_video_yolov7(file: UploadFile = File(...)):
 
     for frame in read_video(video_path):
         frame_id += 1
-        frame_results = yolov7_pipeline.process_frame(frame)
+        frame_results = get_yolov7_pipeline().process_frame(frame)
 
         for r in frame_results:
             r["frame"] = frame_id
@@ -289,7 +322,7 @@ async def websocket_camera(websocket: WebSocket):
             if frame is None:
                 continue
 
-            results = pipeline.process_frame(frame)
+            results = get_pipeline().process_frame(frame)
 
             # FILTER LOW CONFIDENCE
             results = filter_results(results)
