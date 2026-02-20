@@ -28,7 +28,11 @@ app = FastAPI(
     version="2.0.0"
 )
 
-models.Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def startup_event():
+    print("Initializing database...")
+    models.Base.metadata.create_all(bind=engine)
+    print("Database ready.")
 
 
 def get_db():

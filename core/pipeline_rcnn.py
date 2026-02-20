@@ -134,18 +134,18 @@ class TrafficSignRCNNPipeline:
 
         return results
 
-# ===== SIMPLE WRAPPER FOR EVALUATION =====
-pipeline = TrafficSignRCNNPipeline()
+# # ===== SIMPLE WRAPPER FOR EVALUATION =====
+# pipeline = TrafficSignRCNNPipeline()
 
-def detect_rcnn(image_path):
-    frame = cv2.imread(image_path)
-    if frame is None:
-        return []
+# def detect_rcnn(image_path):
+#     frame = cv2.imread(image_path)
+#     if frame is None:
+#         return []
 
-    results = pipeline.process_frame(frame)
+#     results = pipeline.process_frame(frame)
 
-    boxes = []
-    for r in results:
-        boxes.append(r["bbox"])   # real bbox
+#     boxes = []
+#     for r in results:
+#         boxes.append(r["bbox"])   # real bbox
 
-    return boxes
+#     return boxes

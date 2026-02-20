@@ -70,17 +70,17 @@ class TrafficSignYOLOv7Pipeline:
         return results
 
 # ===== SIMPLE WRAPPER FOR EVALUATION =====
-pipeline = TrafficSignYOLOv7Pipeline()
+# pipeline = TrafficSignYOLOv7Pipeline()
 
-def detect_yolov7(image_path):
-    frame = cv2.imread(image_path)
-    if frame is None:
-        return []
+# def detect_yolov7(image_path):
+#     frame = cv2.imread(image_path)
+#     if frame is None:
+#         return []
 
-    results = pipeline.process_frame(frame)
+#     results = pipeline.process_frame(frame)
 
-    boxes = []
-    for r in results:
-        boxes.append(r["bbox"])
+#     boxes = []
+#     for r in results:
+#         boxes.append(r["bbox"])
 
-    return boxes
+#     return boxes

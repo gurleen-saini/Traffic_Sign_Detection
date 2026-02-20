@@ -62,17 +62,17 @@ class TrafficSignSSDPipeline:
         return results
     
 # ===== SIMPLE WRAPPER FOR EVALUATION =====
-pipeline = TrafficSignSSDPipeline()
+# pipeline = TrafficSignSSDPipeline()
 
-def detect_ssd(image_path):
-    frame = cv2.imread(image_path)
-    if frame is None:
-        return []
+# def detect_ssd(image_path):
+#     frame = cv2.imread(image_path)
+#     if frame is None:
+#         return []
 
-    results = pipeline.process_frame(frame)
+#     results = pipeline.process_frame(frame)
 
-    boxes = []
-    for r in results:
-        boxes.append(r["bbox"])   # REAL BBOX
+#     boxes = []
+#     for r in results:
+#         boxes.append(r["bbox"])   # REAL BBOX
 
-    return boxes
+#     return boxes
