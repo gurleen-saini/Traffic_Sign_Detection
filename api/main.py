@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from api.video_utils import read_video
 from core.pipeline import TrafficSignPipeline
-# from core.pipeline_rcnn import TrafficSignRCNNPipeline 
-# from core.pipeline_yolov7 import TrafficSignYOLOv7Pipeline
-# from core.pipeline_ssd import TrafficSignSSDPipeline
+from core.pipeline_rcnn import TrafficSignRCNNPipeline 
+from core.pipeline_yolov7 import TrafficSignYOLOv7Pipeline
+from core.pipeline_ssd import TrafficSignSSDPipeline
 from fastapi import WebSocket, WebSocketDisconnect
 
 import cv2
@@ -28,11 +28,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
-@app.on_event("startup")
-def startup_event():
-    print("Initializing database...")
-    models.Base.metadata.create_all(bind=engine)
-    print("Database ready.")
+models.Base.metadata.create_all(bind=engine)
 
 
 def get_db():
@@ -81,42 +77,15 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
     return {"message": "Login successful"}
 
-pipeline = None
-# rcnn_pipeline = None
-# yolov7_pipeline = None
-# ssd_pipeline = None
-
-
-def get_pipeline():
-    global pipeline
-    if pipeline is None:
-        print("Loading YOLOv8 Pipeline...")
-        pipeline = TrafficSignPipeline()
-    return pipeline
-
-
-# def get_rcnn_pipeline():
-#     global rcnn_pipeline
-#     if rcnn_pipeline is None:
-#         print("Loading RCNN Pipeline...")
-#         # rcnn_pipeline = TrafficSignRCNNPipeline()
-#     return rcnn_pipeline
-
-
-# def get_yolov7_pipeline():
-#     global yolov7_pipeline
-#     if yolov7_pipeline is None:
-#         print("Loading YOLOv7 Pipeline...")
-#         # yolov7_pipeline = TrafficSignYOLOv7Pipeline()
-#     return yolov7_pipeline
-
-
-# def get_ssd_pipeline():
-#     global ssd_pipeline
-#     if ssd_pipeline is None:
-#         print("Loading SSD Pipeline...")
-#         # ssd_pipeline = TrafficSignSSDPipeline()
-#     return ssd_pipeline
+# ================= PIPELINE INIT =================
+# This loads:
+# - YOLOv8 model
+# - CNN model
+# - SLAM
+# - SORT tracker
+pipeline = TrafficSignPipeline()
+rcnn_pipeline = TrafficSignRCNNPipeline()
+yolov7_pipeline = TrafficSignYOLOv7Pipeline()
 
 # ================= ROOT =================
 @app.get("/")
@@ -125,7 +94,7 @@ def root():
         "message": "Traffic Sign Detection API is running",
         "endpoints": {
             "video_detection": "/detect/video",
-            # "rcnn_video": "/detect/video/rcnn",
+            "rcnn_video": "/detect/video/rcnn",
             "docs": "/docs"
         }
     }
@@ -151,7 +120,7 @@ async def detect_video(file: UploadFile = File(...)):
         frame_id += 1
 
         # FULL LOGIC EXECUTION (same as old script)
-        frame_results = get_pipeline().process_frame(frame)
+        frame_results = pipeline.process_frame(frame)
 
         # Attach frame number
         for r in frame_results:
@@ -168,91 +137,92 @@ async def detect_video(file: UploadFile = File(...)):
         "results": all_results
     }
 
-# # ================= RCNN VIDEO =================
-# @app.post("/detect/video/rcnn")
-# async def detect_video_rcnn(file: UploadFile = File(...)):
+# ================= RCNN VIDEO =================
+@app.post("/detect/video/rcnn")
+async def detect_video_rcnn(file: UploadFile = File(...)):
 
-#     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-#         tmp.write(await file.read())
-#         video_path = tmp.name
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(await file.read())
+        video_path = tmp.name
 
-#     all_results = []
-#     frame_id = 0
+    all_results = []
+    frame_id = 0
 
-#     for frame in read_video(video_path):
-#         frame_id += 1
-#         frame_results = get_rcnn_pipeline().process_frame(frame)
+    for frame in read_video(video_path):
+        frame_id += 1
+        frame_results = rcnn_pipeline.process_frame(frame)
 
-#         for r in frame_results:
-#             r["frame"] = frame_id
-#             all_results.append(r)
+        for r in frame_results:
+            r["frame"] = frame_id
+            all_results.append(r)
 
-#     os.remove(video_path)
+    os.remove(video_path)
 
-#     return {
-#         "model": "faster_rcnn",
-#         "total_detections": len(all_results),
-#         "results": all_results
-#     }
+    return {
+        "model": "faster_rcnn",
+        "total_detections": len(all_results),
+        "results": all_results
+    }
 
-# # ================= SSD VIDEO =================
-# # ================= SSD VIDEO =================
+# ================= SSD VIDEO =================
+# ================= SSD VIDEO =================
 
+ssd_pipeline = TrafficSignSSDPipeline()
 
-# @app.post("/detect/video/ssd")
-# async def detect_video_ssd(file: UploadFile = File(...)):
+@app.post("/detect/video/ssd")
+async def detect_video_ssd(file: UploadFile = File(...)):
 
-    # # ---- Save uploaded video temporarily ----
-    # with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-    #     tmp.write(await file.read())
-    #     video_path = tmp.name
+    # ---- Save uploaded video temporarily ----
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(await file.read())
+        video_path = tmp.name
 
-    # all_results = []
-    # frame_id = 0
+    all_results = []
+    frame_id = 0
 
-    # # ---- Process video frame-by-frame ----
-    # for frame in read_video(video_path):
-    #     frame_id += 1
-    #     frame_results = get_ssd_pipeline().process_frame(frame)
+    # ---- Process video frame-by-frame ----
+    for frame in read_video(video_path):
+        frame_id += 1
+        frame_results = ssd_pipeline.process_frame(frame)
 
-    #     for r in frame_results:
-    #         r["frame"] = frame_id
-    #         all_results.append(r)
+        for r in frame_results:
+            r["frame"] = frame_id
+            all_results.append(r)
 
-#     # ---- Cleanup ----
-#     os.remove(video_path)
+    # ---- Cleanup ----
+    os.remove(video_path)
 
-#     return {
-#         "model": "ssd",
-#         "total_detections": len(all_results),
-#         "results": all_results
-#     }
+    return {
+        "model": "ssd",
+        "total_detections": len(all_results),
+        "results": all_results
+    }
 
-# @app.post("/detect/video/yolov7")
-# async def detect_video_yolov7(file: UploadFile = File(...)):
-#     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-#         tmp.write(await file.read())
-#         video_path = tmp.name
+@app.post("/detect/video/yolov7")
+async def detect_video_yolov7(file: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(await file.read())
+        video_path = tmp.name
 
-#     all_results = []
-#     frame_id = 0
+    all_results = []
+    frame_id = 0
 
-#     for frame in read_video(video_path):
-#         frame_id += 1
-#         frame_results = get_yolov7_pipeline().process_frame(frame)
+    for frame in read_video(video_path):
+        frame_id += 1
+        frame_results = yolov7_pipeline.process_frame(frame)
 
-    #     for r in frame_results:
-    #         r["frame"] = frame_id
-    #         r["model"] = "yolov7"
-    #         all_results.append(r)
+        for r in frame_results:
+            r["frame"] = frame_id
+            r["model"] = "yolov7"
+            all_results.append(r)
 
-    # os.remove(video_path)
+    os.remove(video_path)
 
-    # return {
-    #     "model": "yolov7",
-    #     "total_detections": len(all_results),
-    #     "results": all_results
-    # }
+    return {
+        "model": "yolov7",
+        "total_detections": len(all_results),
+        "results": all_results
+    }
 
 
 def draw_boxes(frame, results):
@@ -319,7 +289,7 @@ async def websocket_camera(websocket: WebSocket):
             if frame is None:
                 continue
 
-            results = get_pipeline().process_frame(frame)
+            results = pipeline.process_frame(frame)
 
             # FILTER LOW CONFIDENCE
             results = filter_results(results)
