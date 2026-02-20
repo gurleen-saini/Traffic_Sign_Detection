@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from api.video_utils import read_video
 from core.pipeline import TrafficSignPipeline
-from core.pipeline_rcnn import TrafficSignRCNNPipeline 
-from core.pipeline_yolov7 import TrafficSignYOLOv7Pipeline
-from core.pipeline_ssd import TrafficSignSSDPipeline
+# from core.pipeline_rcnn import TrafficSignRCNNPipeline 
+# from core.pipeline_yolov7 import TrafficSignYOLOv7Pipeline
+# from core.pipeline_ssd import TrafficSignSSDPipeline
 from fastapi import WebSocket, WebSocketDisconnect
 
 import cv2
@@ -106,7 +106,7 @@ def get_rcnn_pipeline():
     global rcnn_pipeline
     if rcnn_pipeline is None:
         print("Loading RCNN Pipeline...")
-        rcnn_pipeline = TrafficSignRCNNPipeline()
+        # rcnn_pipeline = TrafficSignRCNNPipeline()
     return rcnn_pipeline
 
 
@@ -114,7 +114,7 @@ def get_yolov7_pipeline():
     global yolov7_pipeline
     if yolov7_pipeline is None:
         print("Loading YOLOv7 Pipeline...")
-        yolov7_pipeline = TrafficSignYOLOv7Pipeline()
+        # yolov7_pipeline = TrafficSignYOLOv7Pipeline()
     return yolov7_pipeline
 
 
@@ -122,7 +122,7 @@ def get_ssd_pipeline():
     global ssd_pipeline
     if ssd_pipeline is None:
         print("Loading SSD Pipeline...")
-        ssd_pipeline = TrafficSignSSDPipeline()
+        # ssd_pipeline = TrafficSignSSDPipeline()
     return ssd_pipeline
 
 # ================= ROOT =================
