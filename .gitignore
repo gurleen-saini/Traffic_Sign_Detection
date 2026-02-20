@@ -1,34 +1,64 @@
+# ===============================
 # Python
+# ===============================
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Virtual environment
+# ===============================
+# Virtual Environments
+# ===============================
 yolo_env/
+venv/
+env/
 
-# Ignore large pretrained weights only
-yolov8s.pt
-yolov8n.pt
+# ===============================
+# Model Weights (VERY IMPORTANT)
+# ===============================
+*.pt
+*.pth
+*.onnx
+*.h5
+*.weights
 
-# YOLO training outputs
+# ===============================
+# Training Outputs & Datasets
+# ===============================
 runs/
 train/
 valid/
 test/
+data/
+evaluation/
 ts/
 
-# Ignore large/raw videos
+# ===============================
+# Large / Raw Videos
+# ===============================
 testvideo*.mp4
 demonstration.mp4
+video*.mp4
 
-# Allow demo test video
-!traffic-sign-to-test.mp4
-
-# Experimental modules
+# ===============================
+# Experimental / Unused Modules
+# ===============================
 slam/
 fast_rcnn/
 
+# ===============================
+# Logs
+# ===============================
+*.log
+
+# ===============================
+# IDE
+# ===============================
+.vscode/
+.idea/
+
+# ===============================
 # OS
+# ===============================
 .DS_Store
 Thumbs.db
-
-yolov7/

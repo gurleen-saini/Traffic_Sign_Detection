@@ -5,6 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 from tensorflow.keras.models import load_model
 from tracker.sort import Sort
+import easyocr
 
 from core.slam import VisualSLAM
 from core.distance import estimate_distance
@@ -17,6 +18,7 @@ class TrafficSignPipeline:
         self.cnn = load_model("model.h5", compile=False)
         self.tracker = Sort()
         self.slam = VisualSLAM()
+        self.ocr = easyocr.Reader(['en'], gpu=False)
 
         self.alerted_ids = set()
         self.last_print_time = {}
@@ -79,15 +81,31 @@ class TrafficSignPipeline:
             crop = np.expand_dims(crop, axis=0)
 
             pred = self.cnn.predict(crop, verbose=0)
+
+            cnn_conf = float(np.max(pred))   # ⭐ CNN confidence
             cls_id = np.argmax(pred) + 1
+
             cnn_label = CLASSES_43.get(cls_id, "Unknown")
 
+
+            final_label = cnn_label
+
+            # -------- OCR CORRECTION --------
+            if "Speed" in cnn_label or "speed" in cnn_label:
+
+                ocr_digits = self._run_ocr(crops[best_idx])
+
+                if ocr_digits:
+                    final_label = f"Speed Limit {ocr_digits} km/h"
+    
             distance = estimate_distance(yolo_boxes[best_idx][3] - yolo_boxes[best_idx][1])
 
             results_out.append({
                 "track_id": int(track_id),
+                "bbox": [int(x1), int(y1), int(x2), int(y2)], 
                 "yolo_label": yolo_labels[best_idx],
-                "cnn_label": cnn_label,
+                "cnn_label": final_label,
+                "cnn_confidence": cnn_conf,  
                 "distance": distance
             })
 
@@ -100,3 +118,18 @@ class TrafficSignPipeline:
         areaA = (a[2]-a[0])*(a[3]-a[1])
         areaB = (b[2]-b[0])*(b[3]-b[1])
         return inter / (areaA + areaB - inter + 1e-6)
+    
+    def _run_ocr(self, crop):
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (5,5), 0)
+        _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
+        results = self.ocr.readtext(thresh)
+
+        for (_, text, conf) in results:
+            digits = ''.join([c for c in text if c.isdigit()])
+            if digits:
+                return digits
+
+        return None
+

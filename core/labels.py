@@ -45,3 +45,18 @@ CLASSES_43 = {
     42:'End of no passing',
     43:'End no passing veh > 3.5 tons'
 }
+
+# ==========================================================
+# ZERO-BASED LABELS (DERIVED — SAFE)
+# ==========================================================
+
+# CNN classifier (Keras → always 0-based)
+CNN_LABELS = {k - 1: v for k, v in CLASSES_43.items()}
+
+# Faster R-CNN detector (NO background assumed)
+RCNN_ZERO_BASED_LABELS = CNN_LABELS
+
+# Faster R-CNN detector (WITH background = 0)
+# Use ONLY if your RCNN was trained with background class
+RCNN_WITH_BG_LABELS = {k: v for k, v in CLASSES_43.items()}
+# background = 0 (ignored)
