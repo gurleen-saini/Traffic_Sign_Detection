@@ -4,7 +4,6 @@ A Deep Learning based Traffic Sign Detection and Classification system developed
 
 The system detects traffic signs from images/videos and classifies them into different traffic sign categories in real time.
 
----
 
 ## ✨ Features
 
@@ -15,7 +14,6 @@ The system detects traffic signs from images/videos and classifies them into dif
 - User-friendly interface
 - Deployment on Hugging Face Spaces
 
----
 
 ## 🛠️ Technologies Used
 
@@ -26,7 +24,6 @@ The system detects traffic signs from images/videos and classifies them into dif
 - FastAPI
 - React.js
 
----
 
 ## 🚀 How It Works
 
@@ -35,7 +32,6 @@ The system detects traffic signs from images/videos and classifies them into dif
 3. CNN model classifies the detected sign
 4. Final prediction is displayed
 
----
 
 ## ⚙️ Run the Project
 
@@ -58,14 +54,12 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
----
 
 ## 🌐 Deployment
 
 ### Hugging Face Space
 (https://huggingface.co/spaces/Gurleensaini254/traffic-sign-detection)
 
----
 
 ## 📽️ Project Presentation
 
