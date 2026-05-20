@@ -30,7 +30,7 @@ The system detects traffic signs from images/videos and classifies them into dif
 
 ## 🚀 How It Works
 
-1. Input image/video is provided
+1. Live video is provided
 2. YOLO detects traffic signs
 3. CNN model classifies the detected sign
 4. Final prediction is displayed
@@ -71,8 +71,4 @@ uvicorn main:app --reload
 
 https://canva.link/2m7727gi98vnu92
 
----
 
-## 👩‍💻 Author
-
-**Gurleen Saini**
