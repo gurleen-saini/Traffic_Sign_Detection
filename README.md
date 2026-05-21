@@ -58,7 +58,7 @@ uvicorn main:app --reload
 ## 🌐 Deployment
 
 ### Hugging Face Space
-(https://gurleensaini254-traffic-sign-detection.hf.space/)
+(https://huggingface.co/spaces/Gurleensaini254/traffic-sign-detection?logs=container)
 
 
 ## 📽️ Project Presentation
